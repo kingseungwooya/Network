@@ -100,8 +100,8 @@ public class TCPLayer implements BaseLayer {
 	 * send수정 ArpDlg에서 srcip와 dstip를 입력받음 
 	 */
     public boolean send(byte[] srcIPNumber, byte[]dstIPNumber) {
-    	sendCase.tcp_data = input;
-        ((IPLayer)GetUnderLayer()).send(sendCase.tcp_sport,sendCase.tcp_dport);
+    	
+        ((IPLayer)GetUnderLayer()).send(srcIPNumber,dstIPNumber);
         return true;
     }
     

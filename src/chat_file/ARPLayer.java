@@ -328,6 +328,28 @@ public class ARPLayer implements BaseLayer  {
 	private int byte2ToInt(byte value1, byte value2) {
 		return (int) ((value1 << 8) | (value2));
 	}
+	public void SetArpSrcAddress(byte[] input) {
+		for (int i = 0; i < 6; i++) {
+			message.sender_Mac.address[i] = input[i];
+		}
+	}
+
+	public void SetArpDstAddress(byte[] input) {
+		for (int i = 0; i < 6; i++) {
+			message.target_Mac.address[i] = input[i];
+		}
+	}
+	public void SetIpSrcAddress(byte[] input) {
+		for (int i = 0; i < 4; i++) {
+			message.sender_Ip.address[i] = input[i];
+		}
+	}
+
+	public void SetIpDstAddress(byte[] input) {
+		for (int i = 0; i < 4; i++) {
+			message.target_Ip.address[i] = input[i];
+		}
+	}
 
 	
 	@Override
