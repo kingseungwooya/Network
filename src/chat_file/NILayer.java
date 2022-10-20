@@ -38,6 +38,9 @@ public class NILayer implements BaseLayer {
 		m_iNumAdapter = 0; //초기화
 		SetAdapterList();
 	}
+	public List<PcapIf> getAdapterList() {
+		return m_pAdapterList;
+	}
 
 	public void PacketStartDriver() {
 		//pcap 동작에 필요한 변수들

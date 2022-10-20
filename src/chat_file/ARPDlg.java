@@ -227,7 +227,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
             ((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpSrcAddress(garpByte);
             ((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpDstAddress(dstMacAddress);
             
-            ((ARPLayer)m_LayerMgr.GetLayer("ARP")).ARPSend(srcIPNumber, srcIPNumber);
+            ((ARPLayer)m_LayerMgr.GetLayer("ARP")).send(srcIPNumber, srcIPNumber);
          }// 각 하위 레이어에서 필요로 할 정보를 전달한다.
          
          

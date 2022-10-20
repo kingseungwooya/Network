@@ -12,20 +12,25 @@ import java.util.ArrayList;
  * @author ksw_0
  */
 public class TCPLayer implements BaseLayer {
-  private class TCPLayer_HEADER{
-		byte[] tcp_sport;// source port (
-		byte[] tcp_dport;// destination port (
-		byte[] tcp_seq;// sequence number (
-		byte[] tcp_ack;// acknowledged sequence (
-		byte[] tcp_offset;// no use (
-		byte[] tcp_flag;// control flag (
-		byte[] tcp_window;// no use (
-		byte[] tcp_cksum;// check sum (
-		byte[] tcp_urgptr;// no use (
-		byte[] padding; //(4byte)
-		byte[] tcp_data; // data part
-		
-		public TCPLayer_HEADER() {
+	public int nUpperLayerCount = 0;
+	public String pLayerName = null;
+	public BaseLayer p_UnderLayer = null;
+	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+
+	private class _TCP_HEADER {
+		byte[] tcp_sport;	// source port
+		byte[] tcp_dport;	// destination port
+		byte[] tcp_seq;		// sequence number
+		byte[] tcp_ack;		// acknowledge sequence
+		byte[] tcp_offset;	// no use
+		byte[] tcp_flag;	// control flag
+		byte[] tcp_window;	// no use
+		byte[] tcp_cksum;	// check sum
+		byte[] tcp_urgptr;	// no use
+		byte[] padding;		
+		byte[] tcp_data;
+
+		public _TCP_HEADER() {
 			this.tcp_sport = new byte[2];
 			this.tcp_dport = new byte[2];
 			this.tcp_seq = new byte[4];
@@ -35,47 +40,37 @@ public class TCPLayer implements BaseLayer {
 			this.tcp_window = new byte[2];
 			this.tcp_cksum = new byte[2];
 			this.tcp_urgptr = new byte[2];
-			this.padding = new byte[4]; 
+			this.padding = new byte[4];
+			this.tcp_data = null;
 		}
-		
-
 	}
 	
+	_TCP_HEADER m_sHeader = new _TCP_HEADER();
 	
-	TCPLayer_HEADER sendCase = new TCPLayer_HEADER();
-	TCPLayer_HEADER recvCase = new TCPLayer_HEADER();
-	
-	
-    public int nUpperLayerCount = 0;
-    public int nUnderLayerCount = 0;
-    
-    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
-    public BaseLayer p_UnderLayer;
-    
-    public BaseLayer GetUnderLayer() {
-        if (p_UnderLayer == null)
-            return null;
-        return p_UnderLayer;
-    }
-    
-    public void SetUnderLayer(BaseLayer pUnderLayer) {
-        if (pUnderLayer == null)
-            return;
-        this.p_UnderLayer = pUnderLayer;
-    }
-    
-	public BaseLayer GetUpperLayer(int nindex) {
-		if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
-			return null;
-		return p_aUpperLayer.get(nindex);
+	public TCPLayer(String pName) {
+		// super(pName);
+		// TODO Auto-generated constructor stub
+		pLayerName = pName;
+		ResetHeader();
 	}
 	
-    public void SetUpperLayer(BaseLayer pUpperLayer) {
-        if (pUpperLayer == null)
-            return;
-        this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
-    }
-   
+	public void ResetHeader() {
+		for(int i = 0 ; i < 2; i++) {
+			m_sHeader.tcp_sport[i] = (byte) 0x00;
+			m_sHeader.tcp_dport[i] = (byte) 0x00;
+			m_sHeader.tcp_window[i] = (byte) 0x00;
+			m_sHeader.tcp_cksum[i] = (byte) 0x00;
+			m_sHeader.tcp_urgptr[i] = (byte) 0x00;
+		}
+		for(int i = 0 ; i < 4; i++) {
+			m_sHeader.tcp_seq[i] = (byte) 0x00;
+			m_sHeader.tcp_ack[i] = (byte) 0x00;
+			m_sHeader.padding[i] = (byte) 0x00;
+		}
+		m_sHeader.tcp_offset[0] = (byte) 0x00;
+		m_sHeader.tcp_flag[0] = (byte) 0x00;
+		m_sHeader.tcp_data = null;
+	}
     /*
     private byte[] intToByte2(int value) {
         byte[] temp = new byte[2];
@@ -126,18 +121,50 @@ public class TCPLayer implements BaseLayer {
         }
 
     }
+    @Override
+	public void SetUnderLayer(BaseLayer pUnderLayer) {
+		// TODO Auto-generated method stub
+		if (pUnderLayer == null)
+			return;
+		this.p_UnderLayer = pUnderLayer;
+	}
+
+	@Override
+	public void SetUpperLayer(BaseLayer pUpperLayer) {
+		// TODO Auto-generated method stub
+		if (pUpperLayer == null)
+			return;
+		this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
+		// nUpperLayerCount++;
+	}
 
 	@Override
 	public String GetLayerName() {
 		// TODO Auto-generated method stub
-		return null;
+		return pLayerName;
+	}
+
+	@Override
+	public BaseLayer GetUnderLayer() {
+		// TODO Auto-generated method stub
+		if (p_UnderLayer == null)
+			return null;
+		return p_UnderLayer;
+	}
+
+	@Override
+	public BaseLayer GetUpperLayer(int nindex) {
+		// TODO Auto-generated method stub
+		if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
+			return null;
+		return p_aUpperLayer.get(nindex);
 	}
 
 	@Override
 	public void SetUpperUnderLayer(BaseLayer pUULayer) {
-		// TODO Auto-generated method stub
-		
+		this.SetUpperLayer(pUULayer);
+		pUULayer.SetUnderLayer(this);
+
 	}
-
-
+	
 }
