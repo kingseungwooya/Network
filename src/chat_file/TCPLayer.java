@@ -1,10 +1,13 @@
 package chat_file;
+
+import java.util.ArrayList;
+
 /**
  * ±¸ÇöÇØ¾ßÇÔ
  * @author ksw_0
  *
  */
-public class TCPLayer extends BaseLayer {
+public class TCPLayer implements BaseLayer {
   private class TCPLayer_HEADER{
 		byte[] tcp_sport;// source port (
 		byte[] tcp_dport;// destination port (
@@ -89,10 +92,12 @@ public class TCPLayer extends BaseLayer {
         input = cpyInput;
         return input;
     }
-	
-    public boolean Send(byte[] input) {
+	/**
+	 * send수정 src tcp와 target tcp의 byte배열이 들어가야함
+	 */
+    public boolean send(byte[] input) {
     	sendCase.tcp_data = input;
-        GetUnderLayer().Send(sendCase);
+        ((IPLayer)GetUnderLayer()).send(sendCase.tcp_sport,sendCase.tcp_dport);
         return true;
     }
     
@@ -117,6 +122,18 @@ public class TCPLayer extends BaseLayer {
         }
 
     }
+
+	@Override
+	public String GetLayerName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void SetUpperUnderLayer(BaseLayer pUULayer) {
+		// TODO Auto-generated method stub
+		
+	}
 
 
 }
