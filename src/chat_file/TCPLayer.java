@@ -3,9 +3,13 @@ package chat_file;
 import java.util.ArrayList;
 
 /**
- * ±¸ÇöÇØ¾ßÇÔ
+ IP 헤더에 필요한 정보를 담아서 송신
+ Destination IP, Source IP and etc.
+ 수신 된 패킷의 source IP가 자신의 것이면, 버림
+ 수신 된 패킷의 destination IP가 자신의 것이면 TCP Layer로 데이터를 전달하
+고, 아니면 버림
+실제 위의 구현은 ChatApp, FileApp 추가구현 시 필요. (채팅 ,파일 전달)
  * @author ksw_0
- *
  */
 public class TCPLayer implements BaseLayer {
   private class TCPLayer_HEADER{
@@ -93,9 +97,9 @@ public class TCPLayer implements BaseLayer {
         return input;
     }
 	/**
-	 * send수정 src tcp와 target tcp의 byte배열이 들어가야함
+	 * send수정 ArpDlg에서 srcip와 dstip를 입력받음 
 	 */
-    public boolean send(byte[] input) {
+    public boolean send(byte[] srcIPNumber, byte[]dstIPNumber) {
     	sendCase.tcp_data = input;
         ((IPLayer)GetUnderLayer()).send(sendCase.tcp_sport,sendCase.tcp_dport);
         return true;

@@ -45,10 +45,10 @@ public class EthernetLayer implements BaseLayer {
 	}
 
 	private class _ETHERNET_HEADER {
-		_ETHERNET_ADDR enet_dstaddr;
-		_ETHERNET_ADDR enet_srcaddr;
-		byte[] enet_type;
-		byte[] enet_data;
+		_ETHERNET_ADDR enet_dstaddr; //6
+		_ETHERNET_ADDR enet_srcaddr; //6
+		byte[] enet_type; //2
+		byte[] enet_data;//46-1500 
 
 		public _ETHERNET_HEADER() {
 			this.enet_dstaddr = new _ETHERNET_ADDR();
@@ -64,31 +64,194 @@ public class EthernetLayer implements BaseLayer {
 		// super(pName);
 		// TODO Auto-generated constructor stub
 		pLayerName = pName;
+		ResetHeader();
+	}
+
+	public void ResetHeader() {
+		for (int i = 0; i < 6; i++) {
+			m_sHeader.enet_dstaddr.addr[i] = (byte) 0x00;
+			m_sHeader.enet_srcaddr.addr[i] = (byte) 0x00;
+		}
+		m_sHeader.enet_type[0] = (byte) 0x00;
+		m_sHeader.enet_type[1] = (byte) 0x00;
+		m_sHeader.enet_data = null;
+	}
+	  private int byte2ToInt(byte value1, byte value2) {
+	        return (int)((value1 << 8) | (value2));
+	    }
+	    /**
+	     * 채팅 Send 그리고 Port설정 
+	     */
+		public boolean Send(byte[] input, int length) {
+			m_sHeader.enet_type = intToByte2(0x2080); 
+			m_sHeader.enet_data = input;
+			byte[] bytes = encapsulatioin(m_sHeader, input, length);
+			this.GetUnderLayer().Send(bytes, length + 14);
+
+			return true;
+		}
 		
-	}
-
-
-	public boolean Send(byte[] input, int length) {
-	
-
-		return false;
-	}
-
-	
-
-	public boolean Receive(byte[] input) {
+		public boolean fileSend(byte[] input, int length) {
+			m_sHeader.enet_type = intToByte2(0x2090);
+			byte[] bytes = encapsulatioin(m_sHeader, input, length);
+			this.GetUnderLayer().Send(bytes, length + 14);
+			return true;
+		}
 		
-		return true;
+		public boolean ARPSend(byte[] input, int length) {
+			m_sHeader.enet_type = intToByte2(0x0806);
+			m_sHeader.enet_data = input;
+			byte[] bytes = encapsulatioin(m_sHeader, input, length);
+			this.GetUnderLayer().Send(bytes, length+14);
+			return true;
+		}
+		//이더넷 헤더를 분리함 
+		public byte[] decapsulation(byte[] input, int length) {
+			byte[] data = new byte[length - 14];
+			for (int i = 0; i < length - 14; i++)
+				data[i] = input[14 + i];
+			return data;
+		}
+		//출발지 맥주소와 같은지 확인 
+		public boolean IsItMyPacket(byte[] input) {
+			for (int i = 0; i < 6; i++) {
+				if (m_sHeader.enet_srcaddr.addr[i] == input[6 + i])
+					continue;
+				else
+					return false;
+			}
+			return true;
+		}
+		
+		/**
+		 * src 맥주소와 Receive시 받은 목적지 주소와 같은지 확인 
+		 */
+		public boolean IsItMine(byte[] input) {
+			for (int i = 0; i < 6; i++) {
+				if (m_sHeader.enet_srcaddr.addr[i] == input[i])
+					continue;
+				else {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		
+		//목적지 Mac address주소가 BroadCast주소로 되어있는가> ?
+		public boolean IsItBroadcast(byte[] input) {
+			for (int i = 0; i < 6; i++) {
+				if (input[i] == 0xff) {
+					continue;
+				} else
+					return false;
+			}
+			return true;
+		}
+
+		public boolean Receive(byte[] input) {
+			byte[] data;
+			System.out.println("ethernet receive");
+			int temp_type = byte2ToInt(input[12], input[13]);
+			System.out.println(temp_type);
+			if(temp_type == Integer.decode("0x2080")) { //data
+				System.out.println("2080");
+				if(IsItMine(input) || (IsItBroadcast(input)) || !IsItMyPacket(input)) {
+					data = decapsulation(input, input.length);
+					this.GetUpperLayer(0).Receive(data);
+					return true;
+				}
+			}
+			else if(temp_type == Integer.decode("0x2090")) { //file
+				System.out.println("2090");
+				if(IsItMine(input) || (IsItBroadcast(input)) || !IsItMyPacket(input)) {
+					data = decapsulation(input, input.length);
+					this.GetUpperLayer(1).Receive(data);
+					return true;
+				}
+			}else if(temp_type == Integer.decode("0x0806")) {
+				System.out.println("0806");	
+				System.out.println("ethernet arp receive");
+				temp_type = byte2ToInt(input[12], input[13]);
+				if(temp_type == Integer.decode("0x0806")) {
+					
+					if(IsItMine(input) || !IsItMyPacket(input) || (IsItBroadcast(input))) {	// 
+						data = decapsulation(input, input.length);
+						((ARPLayer) this.GetUpperLayer(0)).receive(data);
+						return true;
+					}
+				}
+				return false;
+			}
+			return false; 
+		
+		}
+		
+		
+	//위 게층에서 받아온 Data에 이더넷 헤더를 붙여 encapsulation함 
+	public byte[] encapsulatioin(_ETHERNET_HEADER Header, byte[] input, int length) {//data占쎈� 占쎈엘占쎈�� �븐��肉т��⑤┛
+		byte[] buf = new byte[length + 14];
+		for(int i = 0; i < 6; i++) {
+			buf[i] = Header.enet_dstaddr.addr[i];
+			buf[i+6] = Header.enet_srcaddr.addr[i];
+		}			
+		buf[12] = Header.enet_type[0];
+		buf[13] = Header.enet_type[1];
+		for (int i = 0; i < length; i++)
+			buf[14 + i] = input[i];
+
+		return buf;
+	}
+	
+	private byte[] intToByte2(int value) {
+        byte[] temp = new byte[2];
+        temp[0] |= (byte) ((value & 0xFF00) >> 8);
+        temp[1] |= (byte) (value & 0xFF);
+
+        return temp;
+    }
+
+	public _ETHERNET_ADDR GetEnetDstAddress() {
+		return m_sHeader.enet_dstaddr;
 	}
 
+	public _ETHERNET_ADDR GetEnetSrcAddress() {
+		return m_sHeader.enet_srcaddr;
+	}
+
+	public void SetEnetType(byte[] input) {
+		for (int i = 0; i < 2; i++) {
+			m_sHeader.enet_type[i] = input[i];
+		}
+	}
+
+	public void SetEnetDstAddress(byte[] input) {
+		for (int i = 0; i < 6; i++) {
+			m_sHeader.enet_dstaddr.addr[i] = input[i];
+		}
+	}
+
+	public void SetEnetSrcAddress(byte[] input) {
+		for (int i = 0; i < 6; i++) {
+			m_sHeader.enet_srcaddr.addr[i] = input[i];
+		}
+	}
+
+	
 	@Override
 	public void SetUnderLayer(BaseLayer pUnderLayer) {
-	
+		// TODO Auto-generated method stub
+		if (pUnderLayer == null)
+			return;
+		this.p_UnderLayer = pUnderLayer;
 	}
 
 	@Override
 	public void SetUpperLayer(BaseLayer pUpperLayer) {
-		
+		// TODO Auto-generated method stub
+		if (pUpperLayer == null)
+			return;
+		this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
 	}
 
 	@Override
@@ -99,17 +262,24 @@ public class EthernetLayer implements BaseLayer {
 
 	@Override
 	public BaseLayer GetUnderLayer() {
-		return  null;
+		// TODO Auto-generated method stub
+		if (p_UnderLayer == null)
+			return null;
+		return p_UnderLayer;
 	}
 
 	@Override
 	public BaseLayer GetUpperLayer(int nindex) {
-		return null;
+		// TODO Auto-generated method stub
+		if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
+			return null;
+		return p_aUpperLayer.get(nindex);
 	}
 
 	@Override
 	public void SetUpperUnderLayer(BaseLayer pUULayer) {
-		
+		this.SetUpperLayer(pUULayer);
+		pUULayer.SetUnderLayer(this);
 
 	}
 }

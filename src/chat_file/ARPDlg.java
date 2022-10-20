@@ -137,13 +137,15 @@ public class ARPDlg extends JFrame implements BaseLayer {
                for (int i = 0; i < 6; i++) {
                   dstMacAddress[i] = (byte) Integer.parseInt(dstMac[i], 16);
                }
-               
+               //이더넷 헤더에 출발 맥주소 설정  Chat과 File은 네트워크 계층 안거치고 
+               // 하위레이어 ChatApp, FileApp으로 이동한 후 이더넷 레이어로 이동 그래서 이더넷 주소 설정 필요 
                ((EthernetLayer)m_LayerMgr.GetLayer("Ethernet")).SetEnetSrcAddress(MacAddress);
+               //이더넷 헤더에 목적지 맥주소 설정 -> broadCasting 주소로 설정함 
                ((EthernetLayer)m_LayerMgr.GetLayer("Ethernet")).SetEnetDstAddress(dstMacAddress);
                
-               ((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpSrcAddress(MacAddress);
-               ((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpDstAddress(dstMacAddress);
-               ((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetIpSrcAddress(IpAddress);
+               //((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpSrcAddress(MacAddress);
+               //((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetArpDstAddress(dstMacAddress);
+               //((ARPLayer)m_LayerMgr.GetLayer("ARP")).SetIpSrcAddress(IpAddress);
                System.out.println("ARPDlg에서 IPAddress는? " + Byte.toUnsignedInt(IpAddress[2]) +"."+Byte.toUnsignedInt(IpAddress[3]));
                
                ((NILayer) m_LayerMgr.GetLayer("NI")).SetAdapterNumber(adapterNumber);
@@ -167,7 +169,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
                   dstIPAddress[i] = (byte) Integer.parseInt(byte_dstIP[i], 10);
                }
                dstIPNumber = dstIPAddress;
-               ((TCPLayer) m_LayerMgr.GetLayer("TCP")).ARPSend(srcIPNumber, dstIPNumber);
+               ((TCPLayer) m_LayerMgr.GetLayer("TCP")).send(srcIPNumber, dstIPNumber);
                
             }
          }

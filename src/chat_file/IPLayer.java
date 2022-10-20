@@ -1,6 +1,15 @@
 package chat_file;
 import java.util.ArrayList;
 
+/**
+ IP 헤더에 필요한 정보를 담아서 송신
+ Destination IP, Source IP and etc.
+ 수신 된 패킷의 source IP가 자신의 것이면, 버림
+ 수신 된 패킷의 destination IP가 자신의 것이면 TCP Layer로 데이터를 전달하
+고, 아니면 버림
+실제 위의 구현은 ChatApp, FileApp 추가구현 시 필요. (채팅 ,파일 전달)
+ * @author ksw_0
+ */
 public class IPLayer implements BaseLayer {
 	public int nUpperLayerCount = 0;
 	public String pLayerName = null;
