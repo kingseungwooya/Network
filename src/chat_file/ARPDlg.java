@@ -70,7 +70,8 @@ public class ARPDlg extends JFrame  {
    byte[] srcIPNumber, dstIPNumber, srcMacNumber;
    String Text;
    JProgressBar progressBar;
-
+   private static LayerManager m_LayerMgr = new LayerManager();
+   
    File file;
    
    private ArrayList<ArrayList<byte[]>> cacheTable = new ArrayList<ArrayList<byte[]>>();
@@ -151,7 +152,7 @@ public class ARPDlg extends JFrame  {
                   dstIPAddress[i] = (byte) Integer.parseInt(byte_dstIP[i], 10);
                }
                dstIPNumber = dstIPAddress;
-               
+               ((TCPLayer) m_LayerMgr.GetLayer("TCP")).ARPSend(srcIPNumber, dstIPNumber); 
             }
          }
          // proxy ARP 전송
